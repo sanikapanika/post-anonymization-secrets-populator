@@ -1,0 +1,21 @@
+# Example configuration file for the Post-Anonymization Secrets Populator.
+# This file defines database insert instructions to be executed after anonymization.
+# Each table block includes a table name and an array of entries (rows),
+# where each entry maps to column-value pairs in that table.
+
+tables:
+  - name: your_table_name_here
+    entries:
+      - id: "0x015cd7dd9afb452cb50d0b2289fec7ef" # Quotes must be there for binary values, script will parse the string to a binary, only it must begin with 0x
+        column2: value2
+        column3: value3
+
+      - column1: another_value1
+        column2: another_value2
+        column3: another_value3
+
+  - name: another_table_name
+    entries:
+      - column1: yet_another_value1
+        column2: yet_another_value2
+        column3: yet_another_value3

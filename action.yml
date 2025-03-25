@@ -1,0 +1,21 @@
+name: "Post-Anonymization Secrets Populator"
+description: "Inserts your safe test config data into a database from a YAML file."
+inputs:
+  db_host:
+    description: "Database host"
+    required: true
+  db_name:
+    description: "Database name"
+    required: true
+  db_user:
+    description: "Database user"
+    required: true
+  db_password:
+    description: "Database password"
+    required: true
+  config_file:
+    description: "YAML file with insert data"
+    required: true
+runs:
+  using: "docker"
+  image: "Dockerfile"
