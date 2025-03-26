@@ -1,9 +1,7 @@
 FROM python:3.10-slim
 
-WORKDIR /app
-
-COPY entrypoint.py .
+COPY entrypoint.py /entrypoint.py
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "entrypoint.py"]
+ENTRYPOINT ["python", "/entrypoint.py"]
