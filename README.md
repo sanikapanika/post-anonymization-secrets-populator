@@ -16,9 +16,13 @@ When you copy production data to a test or staging environment, sensitive creden
 
 - 🔐 Prevents accidental use of production integrations in test environments  
 - ✅ Supports `INSERT ... ON DUPLICATE KEY UPDATE` for idempotency  
-- 📄 Simple YAML config for defining target tables and values  
-- 🐳 Runs as a Docker-based GitHub Action  
-- 💾 Supports MySQL databases (more to come)
+- ⚙️ Optional `commit_strategy`:
+  - `per_table`: Commit each table independently (safer, partial success)
+  - `all_or_nothing`: Fail entire action if any table fails (default, transactional)
+- 🧠 Binary UUIDs supported via `"0x..."` auto-conversion
+- 📄 YAML config for defining table entries
+- 🐳 Docker-based GitHub Action  
+- 💾 MySQL support (PostgreSQL planned)
 
 ---
 
@@ -47,17 +51,22 @@ jobs:
           db_name: ${{ secrets.DB_NAME }}
           db_user: ${{ secrets.DB_USER }}
           db_password: ${{ secrets.DB_PASSWORD }}
-          config_file: test-env-config.yaml
+          config_file: test-env-config.yaml        # ✅ Required (lives in your project, check example-config.yaml for reference)
+          commit_strategy: all_or_nothing          # optional: all_or_nothing (default) or per_table
 ```
 
-### Required Secrets
+---
 
-Define the following in your repository or organization:
+## 🔐 Required Secrets / Inputs
 
-- `DB_HOST`
-- `DB_NAME`
-- `DB_USER`
-- `DB_PASSWORD`
+| Name              | Required | Description                                |
+|-------------------|----------|--------------------------------------------|
+| `db_host`         | ✅       | Hostname of the MySQL database             |
+| `db_name`         | ✅       | Database name                              |
+| `db_user`         | ✅       | Database username                          |
+| `db_password`     | ✅       | Database password                          |
+| `config_file`     | ✅       | Path to YAML config file with insert data  |
+| `commit_strategy` | ❌       | `per_table` or `all_or_nothing` (default)  |
 
 ---
 
@@ -69,7 +78,7 @@ Create a file like `test-env-config.yaml` in your repo root:
 tables:
   - name: your_table_name_here
     entries:
-      - id: "0x015cd7dd9afb452cb50d0b2289fec7ef" # Quotes must be there for binary values, script will parse the string to a binary, only it must begin with 0x
+      - id: "0x015cd7dd9afb452cb50d0b2289fec7ef"  # ✅ must be quoted; auto-converted to BINARY(16)
         column2: value2
         column3: value3
 
@@ -85,9 +94,10 @@ tables:
 ```
 
 ### Notes:
-- Field names must match column names in your database.
-- You can insert binary UUIDs using `"0x..."` notation — the tool will automatically convert them to raw `BINARY(16)` format.
-- All inserts are idempotent via `ON DUPLICATE KEY UPDATE`.
+- Field names must match your DB schema.
+- Binary UUIDs should be written as quoted `"0x..."` hex strings.
+- If `commit_strategy` is `per_table`, failed tables will be skipped with warnings.
+- If `commit_strategy` is `all_or_nothing`, any error will abort the whole process.
 
 ---
 
@@ -96,8 +106,8 @@ tables:
 ### Prerequisites
 
 - Python 3.10+
-- Docker (for GitHub Action testing)
-- MySQL database (locally or remotely)
+- Docker (for running as an action)
+- MySQL database
 
 ### Install dependencies
 
@@ -112,6 +122,8 @@ export INPUT_DB_HOST=localhost
 export INPUT_DB_NAME=test_db
 export INPUT_DB_USER=root
 export INPUT_DB_PASSWORD=secret
+export INPUT_CONFIG_FILE=test-env-config.yaml
+export INPUT_COMMIT_STRATEGY=all_or_nothing  # or per_table
 python entrypoint.py
 ```
 
@@ -133,19 +145,19 @@ python entrypoint.py
 
 ## 🧱 Roadmap
 
-- [ ] Add PostgreSQL support  
-- [ ] Support for truncating tables before insert  
-- [ ] Support pre- and post-insert hooks  
-- [ ] YAML schema validation with error messages
+- [ ] PostgreSQL support  
+- [ ] Pre- and post-insert SQL hooks  
+- [ ] YAML schema validation with type checks  
+- [ ] Dry-run mode (no DB writes, just validate and log)
 
 ---
 
 ## 🤝 Contributing
 
-Contributions welcome! Please open an issue or pull request if you'd like to improve functionality, add database drivers, or expand YAML support.
+Contributions welcome! Feel free to open an issue or PR for bugfixes, new database drivers, or feature enhancements.
 
 ---
 
 ## 🛡️ License
 
-MIT — do whatever you want, just don’t break production.
+MIT — use freely, modify safely, and don’t leak your prod API keys.

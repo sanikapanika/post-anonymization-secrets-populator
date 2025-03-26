@@ -1,0 +1,22 @@
+name: Post-Anonymization Setup
+
+on:
+  workflow_dispatch:
+
+jobs:
+  inject-test-config:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Inject test environment secrets
+        uses: sanikapanika/post-anonymization-secrets-populator@v0.0.3
+        with:
+          db_host: ${{ secrets.DB_HOST }}
+          db_name: ${{ secrets.DB_NAME }}
+          db_user: ${{ secrets.DB_USER }}
+          db_password: ${{ secrets.DB_PASSWORD }}
+          config_file: test-env-config.yaml        # ✅ Required (lives in your project, check example-config.yaml for reference)
+          commit_strategy: all_or_nothing          # optional: all_or_nothing (default) or per_table
