@@ -6,6 +6,13 @@ import binascii
 
 CONFIG_FILE = os.getenv("INPUT_CONFIG_FILE")
 
+def get_commit_strategy():
+    strategy = os.getenv("INPUT_COMMIT_STRATEGY", "all_or_nothing").lower()
+    if strategy not in ["per_table", "all_or_nothing"]:
+        print(f"❌ Invalid commit strategy: {strategy}")
+        exit(1)
+    return strategy
+
 def hex_to_bin(entry):
     for key, value in entry.items():
         if isinstance(value, str) and value.startswith("0x"):
@@ -49,14 +56,40 @@ def main():
         if not conn.is_connected():
             raise Exception("Database connection failed.")
 
+        strategy = get_commit_strategy()
         yaml_data = load_yaml(CONFIG_FILE)
-        for table_data in yaml_data.get("tables", []):
-            insert_entries(conn, table_data["name"], table_data["entries"])
 
-        conn.commit()
-        conn.close()
+        if strategy == "per_table":
+            for table_data in yaml_data.get("tables", []):
+                table_name = table_data["name"]
+                entries = table_data["entries"]
+
+                try:
+                    print(f"Processing table: {table_name}")
+                    insert_entries(conn, table_name, entries)
+                    conn.commit()
+                except Exception as e:
+                    print(f"Skipped table '{table_name}' due to error: {e}")
+                    conn.rollback()
+
+        elif strategy == "all_or_nothing":
+            try:
+                print("Starting all-or-nothing transaction")
+                for table_data in yaml_data.get("tables", []):
+                    table_name = table_data["name"]
+                    entries = table_data["entries"]
+
+                    print(f"Processing table: {table_name}")
+                    insert_entries(conn, table_name, entries)
+
+                conn.commit()
+                print("✅ All changes committed.")
+            except Exception as e:
+                conn.rollback()
+                print(f"❌ Transaction aborted due to error: {e}")
+                exit(1)
+
         print("Test environment secrets populated successfully.")
-
     except Error as e:
         print(f"MySQL error: {e}")
         exit(1)

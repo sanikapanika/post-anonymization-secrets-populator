@@ -16,6 +16,10 @@ inputs:
   config_file:
     description: "YAML file with insert data"
     required: true
+  commit_strategy:
+    description: "How to commit changes: per_table or all_or_nothing"
+    required: false
+    default: "all_or_nothing"
 runs:
   using: "docker"
   image: "Dockerfile"
