@@ -4,6 +4,9 @@ inputs:
   db_host:
     description: "Database host"
     required: true
+  db_port:
+    description: "Database port"
+    required: true
   db_name:
     description: "Database name"
     required: true
