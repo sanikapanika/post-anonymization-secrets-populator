@@ -46,6 +46,7 @@ def insert_entries(conn, table, entries):
 def main():
     db_config = {
         "host": os.getenv("INPUT_DB_HOST"),
+        "port": os.getenv("INPUT_DB_PORT"),
         "database": os.getenv("INPUT_DB_NAME"),
         "user": os.getenv("INPUT_DB_USER"),
         "password": os.getenv("INPUT_DB_PASSWORD"),

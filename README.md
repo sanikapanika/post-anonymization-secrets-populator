@@ -48,6 +48,7 @@ jobs:
         uses: sanikapanika/post-anonymization-secrets-populator@v1
         with:
           db_host: ${{ secrets.DB_HOST }}
+          db_port: ${{ secrets.DB_PORT }}
           db_name: ${{ secrets.DB_NAME }}
           db_user: ${{ secrets.DB_USER }}
           db_password: ${{ secrets.DB_PASSWORD }}
@@ -59,14 +60,15 @@ jobs:
 
 ## 🔐 Required Secrets / Inputs
 
-| Name              | Required | Description                                |
-|-------------------|----------|--------------------------------------------|
-| `db_host`         | ✅       | Hostname of the MySQL database             |
-| `db_name`         | ✅       | Database name                              |
-| `db_user`         | ✅       | Database username                          |
-| `db_password`     | ✅       | Database password                          |
-| `config_file`     | ✅       | Path to YAML config file with insert data  |
-| `commit_strategy` | ❌       | `per_table` or `all_or_nothing` (default)  |
+| Name              | Required | Description                               |
+|-------------------|----------|-------------------------------------------|
+| `db_host`         | ✅       | Hostname of the MySQL database            |
+| `db_port`         | ✅       | Port of the MySQL database                |
+| `db_name`         | ✅       | Database name                             |
+| `db_user`         | ✅       | Database username                         |
+| `db_password`     | ✅       | Database password                         |
+| `config_file`     | ✅       | Path to YAML config file with insert data |
+| `commit_strategy` | ❌       | `per_table` or `all_or_nothing` (default) |
 
 ---
 
@@ -119,6 +121,7 @@ pip install -r requirements.txt
 
 ```bash
 export INPUT_DB_HOST=localhost
+export INPUT_DB_PORT=3306
 export INPUT_DB_NAME=test_db
 export INPUT_DB_USER=root
 export INPUT_DB_PASSWORD=secret
