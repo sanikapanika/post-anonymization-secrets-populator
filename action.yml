@@ -23,6 +23,28 @@ inputs:
     description: "How to commit changes: per_table or all_or_nothing"
     required: false
     default: "all_or_nothing"
+  use_ssh_tunnel:
+    description: "Use SSH tunnel to connect to the database"
+    required: false
+    default: "false"
+  ssh_jump_host:
+    description: "SSH jump host for tunneling"
+    required: false
+  ssh_jump_port:
+    description: "SSH jump host port for tunneling"
+    required: false
+  ssh_jump_user:
+    description: "SSH jump host user for tunneling"
+    required: false
+  ssh_jump_key:
+    description: "SSH jump host private key for tunneling"
+    required: false
+  ssh_db_host:
+    description: "Tunnel target DB, the actual database hostname/IP address"
+    required: false
+  ssh_db_port:
+    description: "Tunnel target DB port"
+    required: false
 runs:
   using: "docker"
   image: "Dockerfile"
