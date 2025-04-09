@@ -46,13 +46,13 @@ def insert_entries(conn, table, entries):
 
 def start_ssh_tunnel_if_enabled():
     if os.getenv("INPUT_USE_SSH_TUNNEL", "false").lower() != "true":
-        return None, int(os.getenv("INPUT_DB_PORT", "3306"))  # Use real port directly
+        return None, int(os.getenv("INPUT_DB_PORT", "3306"))
 
     local_port = 3307
     jump_host = os.getenv("INPUT_SSH_JUMP_HOST")
     jump_port = os.getenv("INPUT_SSH_JUMP_PORT", 22)
-    db_host = os.getenv("INPUT_SSH_DB_HOST")  # For the tunnel target
-    db_port = os.getenv("INPUT_SSH_DB_PORT", "3306")
+    db_host = os.getenv("INPUT_DB_HOST")
+    db_port = os.getenv("INPUT_DB_PORT", "3306")
     ssh_user = os.getenv("INPUT_SSH_JUMP_USER")
     ssh_key = os.getenv("INPUT_SSH_JUMP_KEY")
 

@@ -39,12 +39,7 @@ inputs:
   ssh_jump_key:
     description: "SSH jump host private key for tunneling"
     required: false
-  ssh_db_host:
-    description: "Tunnel target DB, the actual database hostname/IP address"
-    required: false
-  ssh_db_port:
-    description: "Tunnel target DB port"
-    required: false
+
 runs:
   using: "docker"
   image: "Dockerfile"
