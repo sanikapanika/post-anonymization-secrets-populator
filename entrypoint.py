@@ -1,14 +1,22 @@
+import base64
 import binascii
 import os
+import signal
+import subprocess
+import time
 
 import mysql.connector
 import yaml
 from mysql.connector import Error
-import subprocess
-import time
-import signal
 
 CONFIG_FILE = os.getenv("INPUT_CONFIG_FILE")
+
+
+def write_ssh_key_from_base64(encoded_key: str, path: str) -> None:
+    with open(path, "wb") as f:
+        f.write(base64.b64decode(encoded_key))
+    os.chmod(path, 0o600)
+
 
 def get_commit_strategy():
     strategy = os.getenv("INPUT_COMMIT_STRATEGY", "all_or_nothing").lower()
@@ -17,15 +25,18 @@ def get_commit_strategy():
         exit(1)
     return strategy
 
+
 def hex_to_bin(entry):
     for key, value in entry.items():
         if isinstance(value, str) and value.startswith("0x"):
             entry[key] = binascii.unhexlify(value[2:])  # Strip '0x' and convert to bytes
     return entry
 
+
 def load_yaml(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
+
 
 def insert_entries(conn, table, entries):
     cursor = conn.cursor()
@@ -44,6 +55,7 @@ def insert_entries(conn, table, entries):
         cursor.execute(query, values)
     cursor.close()
 
+
 def start_ssh_tunnel_if_enabled():
     if os.getenv("INPUT_USE_SSH_TUNNEL", "false").lower() != "true":
         return None, int(os.getenv("INPUT_DB_PORT", "3306"))
@@ -54,18 +66,22 @@ def start_ssh_tunnel_if_enabled():
     db_host = os.getenv("INPUT_DB_HOST")
     db_port = os.getenv("INPUT_DB_PORT", "3306")
     ssh_user = os.getenv("INPUT_SSH_JUMP_USER")
-    ssh_key = os.getenv("INPUT_SSH_JUMP_KEY")
+    ssh_key_content = os.getenv("INPUT_SSH_JUMP_KEY")
 
-    if not all([jump_host, db_host, ssh_user, ssh_key]):
+    if not all([jump_host, db_host, ssh_user, ssh_key_content]):
         print("❌ SSH tunnel requested but missing environment variables.")
         exit(1)
+
+    ssh_key_b64 = os.getenv("INPUT_SSH_JUMP_KEY")
+    ssh_key_path = os.path.join(os.getcwd(), ".pasp_ssh_key")
+    write_ssh_key_from_base64(ssh_key_b64, ssh_key_path)
 
     tunnel_cmd = [
         "ssh", "-f", "-N",
         "-L", f"{local_port}:{db_host}:{db_port}",
         f"{ssh_user}@{jump_host}",
         "-p", jump_port,
-        "-i", ssh_key,
+        "-i", ssh_key_path,
         "-o", "StrictHostKeyChecking=no",
         "-o", "ExitOnForwardFailure=yes"
     ]
@@ -75,6 +91,7 @@ def start_ssh_tunnel_if_enabled():
     time.sleep(2)
     return proc, local_port
 
+
 def stop_ssh_tunnel(proc):
     if proc:
         print("🛑 Stopping SSH tunnel")
@@ -82,6 +99,7 @@ def stop_ssh_tunnel(proc):
             os.kill(proc.pid, signal.SIGTERM)
         except Exception as e:
             print(f"⚠️ Failed to kill SSH tunnel: {e}")
+
 
 def main():
     proc, port = start_ssh_tunnel_if_enabled()
@@ -138,6 +156,7 @@ def main():
         exit(1)
     finally:
         stop_ssh_tunnel(proc)
+
 
 if __name__ == "__main__":
     main()
